@@ -10,18 +10,37 @@ haproxy_frontend_bind_address: '*'
 haproxy_frontend_port: 80
 haproxy_frontend_mode: 'http'
 
-# Backend settings.
-haproxy_backend_name: 'habackend'
-haproxy_backend_mode: 'http'
-haproxy_backend_balance_method: 'roundrobin'
-haproxy_backend_httpchk: 'HEAD / HTTP/1.1\r\nHost:localhost'
+haproxy_frontend_servers:
+  - name: frontend_server_example
+    bind: "{{ ansible_host }}"
+    mode: http
+    port: 80
+    options:
+      - forwardfor
+      - httpclose
+    additional_options:
+      - acl is_delete method DELETE
+      - http-request deny if is_delete
+    default_backend: backend_server_example
 
 # List of backend servers.
-haproxy_backend_servers: []
-# - name: app1
-#   address: 192.168.0.1:80
-# - name: app2
-#   address: 192.168.0.2:80
+haproxy_backend_servers:
+ - name: backend_server_example
+   mode: http
+   balance: roundrobin
+   options:
+     - forwardfor
+     - httpclose
+   servers:
+     - name: server1
+       address: 192.168.1.2:80
+       check: weight 1 check inter 1000 rise 5 fall 1
+     - name: server1
+       address: 192.168.1.3:80
+       check: weight 1 check inter 1000 rise 5 fall 1
+     - name: server1
+       address: 192.168.1.4:80
+       check: weight 1 check inter 1000 rise 5 fall 1
 
 # Extra global vars (see README for example usage).
 haproxy_global_vars: []
