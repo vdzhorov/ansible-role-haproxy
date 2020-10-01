@@ -1,8 +1,6 @@
 # Ansible Role: HAProxy
 
-[![Build Status](https://travis-ci.org/geerlingguy/ansible-role-haproxy.svg?branch=master)](https://travis-ci.org/geerlingguy/ansible-role-haproxy)
-
-Installs HAProxy on RedHat/CentOS and Debian/Ubuntu Linux servers.
+Installs HAProxy on RedHat/CentOS and Debian/Ubuntu Linux servers. Forked from geerlingguy.haproxy and expanded some haproxy configuration.
 
 **Note**: This role _officially_ supports HAProxy versions 1.4 or 1.5. Future versions may require some rework.
 
@@ -25,27 +23,61 @@ The jail directory where chroot() will be performed before dropping privileges. 
     haproxy_user: haproxy
     haproxy_group: haproxy
 
-The user and group under which HAProxy should run. Only change this if you know what you're doing!
+HAProxy defaults configuration example.
+```
+haproxy_defaults:
+  - log global
+  - mode http
+  - option httplog
+  - option dontlognull
+  - timeout http-request    10s
+  - timeout queue           1m
+  - timeout connect         10s
+  - timeout client          5m
+  - timeout server          5m
+  - timeout http-keep-alive 10s
+  - timeout check           10s
+```
 
-    haproxy_frontend_name: 'hafrontend'
-    haproxy_frontend_bind_address: '*'
-    haproxy_frontend_port: 80
-    haproxy_frontend_mode: 'http'
+HAProxy frontends configuration directives.
 
-HAProxy frontend configuration directives.
+```
+haproxy_frontend_servers:
+  - name: frontend_server_example
+    bind: "{{ ansible_host }}"
+    mode: http
+    port: 80
+    options:
+      - forwardfor
+      - httpclose
+    additional_options:
+      - acl is_delete method DELETE
+      - http-request deny if is_delete
+    default_backend: backend_server_example
 
-    haproxy_backend_name: 'habackend'
-    haproxy_backend_mode: 'http'
-    haproxy_backend_balance_method: 'roundrobin'
-    haproxy_backend_httpchk: 'HEAD / HTTP/1.1\r\nHost:localhost'
+HAProxy backends configuration directives.
+```
 
-HAProxy backend configuration directives.
-
-    haproxy_backend_servers:
-      - name: app1
-        address: 192.168.0.1:80
-      - name: app2
-        address: 192.168.0.2:80
+HAProxy backends configuration directives.
+```
+haproxy_backend_servers:
+  - name: backend_server_example
+    mode: http
+    balance: roundrobin
+    options:
+      - forwardfor
+      - httpclose
+    servers:
+      - name: server1
+        address: 192.168.1.2:80
+        check: weight 1 check inter 1000 rise 5 fall 1
+      - name: server1
+        address: 192.168.1.3:80
+        check: weight 1 check inter 1000 rise 5 fall 1
+      - name: server1
+        address: 192.168.1.4:80
+        check: weight 1 check inter 1000 rise 5 fall 1
+```
 
 A list of backend servers (name and address) to which HAProxy will distribute requests.
 
@@ -64,7 +96,7 @@ None.
     - hosts: balancer
       sudo: yes
       roles:
-        - { role: geerlingguy.haproxy }
+        - { role: vdzhorov.haproxy }
 
 ## License
 
