@@ -35,8 +35,9 @@ defaults
     {% for option in frontend.options %}option {{ option }}
     {% endfor %}
 
-    {% for a_option in frontend.additional_options %}{{ a_option }}
+    {% if frontend.additional_options is defined %}{% for a_option in frontend.additional_options %}{{ a_option }}
     {% endfor %}
+    {% endif %}
 
     {% if frontend.default_backend is defined %}default_backend {{ frontend.default_backend }}
     {% endif %}
@@ -48,6 +49,10 @@ defaults
     balance {{ backend.balance }}
     {% for option in backend.options %}option {{ option }}
     {% endfor %}
+
+    {% if backend.additional_options is defined %}{% for a_option in backend.additional_options %}{{ a_option }}
+    {% endfor %}
+    {% endif %}
 
     {% for server in backend.servers %}server {{ server.name }} {{ server.address }} {{ server.check }}
     {% endfor %}
